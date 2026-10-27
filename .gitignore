@@ -1,0 +1,9 @@
+node_modules/
+config/config.env
+.env
+grade.json
+grade.md
+newman-report.json
+coverage/
+*.log
+.DS_Store
