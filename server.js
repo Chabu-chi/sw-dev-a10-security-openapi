@@ -8,6 +8,10 @@ const { xss } = require('express-xss-sanitizer');
 const rateLimit = require('express-rate-limit');
 const hpp = require('hpp');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+const path = require('path');
+const openapi = require('./openapi');
 
 dotenv.config({ path: './config/config.env' });
 
@@ -17,11 +21,26 @@ app.use(cookieParser());
 app.set('query parser', 'extended');
 
 app.use(mongoSanitize());
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: { upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null }
+  }
+}));
 app.use(xss());
 app.use(rateLimit({ windowMs: 10 * 60 * 1000, max: 100 }));
 app.use(hpp());
 app.use(cors());
+
+const swaggerDocs = swaggerJsdoc({
+  definition: {
+    ...openapi,
+    openapi: '3.0.0',
+    servers: [{ url: `http://localhost:${process.env.PORT || 5000}` }]
+  },
+  apis: [path.join(__dirname, 'routes', '*.js')]
+});
+app.get('/openapi.json', (req, res) => res.json(swaggerDocs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 app.use('/api/v1/hospitals', require('./routes/hospitals'));
 app.use('/api/v1/appointments', require('./routes/appointments'));

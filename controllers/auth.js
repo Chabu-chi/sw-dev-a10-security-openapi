@@ -8,6 +8,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 
 exports.register = async (req, res) => {
   try {
+
     const { name, email, password, tel } = req.body;
     // Public registration must never be able to create an administrator.
     const user = await User.create({ name, email, password, tel, role: 'user' });
@@ -30,7 +31,7 @@ exports.login = async (req, res) => {
     }
     sendTokenResponse(user, 200, res);
   } catch (err) {
-    res.status(401).json({ success: false, message: 'Invalid credentials' });
+    res.status(401).json({ success: false, message: 'Cannot convert email or password to string' });
   }
 };
 
